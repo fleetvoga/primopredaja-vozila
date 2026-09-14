@@ -2,14 +2,13 @@ import streamlit as st
 import sqlite3
 from datetime import datetime
 
-# Naziv baze fajla
 DB_NAME = 'evidencija_vozila.db'
 
 def inicijalizuj_bazu():
     konekcija = sqlite3.connect(DB_NAME)
     kursor = konekcija.cursor()
     
-    # Kreiranje tabele sa ispravnim i pojednostavljenim poljima za imena
+    # Kreiranje tabele prilagođene vašoj bazi sa slika
     kursor.execute('''
         CREATE TABLE IF NOT EXISTS primopredaja (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,16 +36,17 @@ def inicijalizuj_bazu():
             stavka_19_dodatak_pojas TEXT, napomena_19 TEXT,
             stavka_20_tag TEXT, napomena_20 TEXT,
             stavka_21_kartica_rampa TEXT, napomena_21 TEXT,
-            predaje_ime_prezime TEXT NOT NULL,
-            predaje_telefon TEXT NOT NULL,
-            preuzima_ime_prezime TEXT NOT NULL,
-            preuzima_telefon TEXT NOT NULL
+            predaje_ime TEXT,
+            predaje_prezime TEXT,
+            predaje_telefon TEXT,
+            preuzima_ime TEXT,
+            preuzima_prezime TEXT,
+            preuzima_telefon TEXT
         )
     ''')
     konekcija.commit()
     konekcija.close()
 
-# Pokreni inicijalizaciju baze pri svakom pokretanju aplikacije
 inicijalizuj_bazu()
 
 def upisi_u_bazu(podaci):
@@ -77,9 +77,9 @@ def upisi_u_bazu(podaci):
             stavka_19_dodatak_pojas, napomena_19,
             stavka_20_tag, napomena_20,
             stavka_21_kartica_rampa, napomena_21,
-            predaje_ime_prezime, predaje_telefon,
-            preuzima_ime_prezime, preuzima_telefon
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            predaje_ime, predaje_prezime, predaje_telefon,
+            preuzima_ime, preuzima_prezime, preuzima_telefon
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', podaci)
     
     konekcija.commit()
@@ -104,7 +104,7 @@ stavke_nazivi = [
     "5. Prsluk (u kabini, vozačeva vrata)", "6. Držač za telefon (podešen prema preporuci)",
     "7. Kabl za vozačev telefon (2m C)", "8. Kabl za klijenta (1m C)", "9. Kabl za klijenta (1m iPhone)",
     "10. Voda u držačima", "11. Dve vode u naslonu za ruku", "12. Voda u prtljažniku",
-    "13. Vlažne maramice na poziciji", "14. Bezbedonosni komplet", "15. Kišobran",
+    "13. Vlažne maramice na poziciji", "14. Bezbednosni komplet", "15. Kišobran",
     "16. Buster za decu", "17. Sedište za decu (opciono)", "18. Tablica za doček",
     "19. Dodatak za pojas", "20. TAG", "21. Kartica za rampu"
 ]
@@ -131,25 +131,27 @@ st.subheader("Podaci o vozačima")
 col1, col2 = st.columns(2)
 with col1:
     st.markdown("**Vozač koji predaje:**")
-    p_ime_prezime = st.text_input("Ime i prezime vozača koji predaje", key="p_ip")
+    p_ime = st.text_input("Ime vozača koji predaje", key="p_ime")
+    p_prezime = st.text_input("Prezime vozača koji predaje", key="p_prezime")
     p_tel = st.text_input("Telefon vozača koji predaje", key="p_tel")
 
 with col2:
     st.markdown("**Vozač koji preuzima:**")
-    uz_ime_prezime = st.text_input("Ime i prezime vozača koji preuzima", key="uz_ip")
+    uz_ime = st.text_input("Ime vozača koji preuzima", key="uz_ime")
+    uz_prezime = st.text_input("Prezime vozača koji preuzima", key="uz_prezime")
     uz_tel = st.text_input("Telefon vozača koji preuzima", key="uz_tel")
 
 st.markdown("---")
 
 if st.button("Pošalji izveštaj", type="primary", use_container_width=True):
-    if not registracija or not p_ime_prezime or not uz_ime_prezime:
+    if not registracija or not p_ime or not uz_ime:
         st.error("Molimo popunite registraciju i imena oba vozača!")
     else:
         podaci_za_upis = [
             trenutni_datum, trenutno_vreme, registracija,
             *rezultati_forme,
-            p_ime_prezime, p_tel,
-            uz_ime_prezime, uz_tel
+            p_ime, p_prezime, p_tel,
+            uz_ime, uz_prezime, uz_tel
         ]
         upisi_u_bazu(podaci_za_upis)
         st.success("Uspešno poslato! Lista je sačuvana u bazi.")
