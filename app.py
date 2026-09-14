@@ -8,7 +8,6 @@ def inicijalizuj_bazu():
     konekcija = sqlite3.connect(DB_NAME)
     kursor = konekcija.cursor()
     
-    # Kreiranje tabele prilagođene vašoj bazi sa slika
     kursor.execute('''
         CREATE TABLE IF NOT EXISTS primopredaja (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,35 +52,30 @@ def upisi_u_bazu(podaci):
     konekcija = sqlite3.connect(DB_NAME)
     kursor = konekcija.cursor()
     
-    kursor.execute('''
-        INSERT INTO primopredaja (
-            datum, vreme, registracija,
-            stavka_1_saobracajna, napomena_1,
-            stavka_2_polisa, napomena_2,
-            stavka_3_zeleni_karton, napomena_3,
-            stavka_4_evropski_izvestaj, napomena_4,
-            stavka_5_prsluk, napomena_5,
-            stavka_6_drzac_za_telefon, napomena_6,
-            stavka_7_kabl_vozac, napomena_7,
-            stavka_8_kabl_klijent_c, napomena_8,
-            stavka_9_kabl_klijent_iphone, napomena_9,
-            stavka_10_voda_drzaci, napomena_10,
-            stavka_11_voda_naslon, napomena_11,
-            stavka_12_voda_prtljaznik, napomena_12,
-            stavka_13_vlazne_maramice, napomena_13,
-            stavka_14_bezbednosni_komplet, napomena_14,
-            stavka_15_kisobran, napomena_15,
-            stavka_16_buster, napomena_16,
-            stavka_17_sediste, napomena_17,
-            stavka_18_tablica_docek, napomena_18,
-            stavka_19_dodatak_pojas, napomena_19,
-            stavka_20_tag, napomena_20,
-            stavka_21_kartica_rampa, napomena_21,
-            predaje_ime, predaje_prezime, predaje_telefon,
-            preuzima_ime, preuzima_prezime, preuzima_telefon
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', podaci)
+    # Dinamički generišemo upit na osnovu broja prosleđenih vrednosti da nikada ne dođe do neslaganja
+    kolone = [
+        "datum", "vreme", "registracija",
+        "stavka_1_saobracajna", "napomena_1", "stavka_2_polisa", "napomena_2",
+        "stavka_3_zeleni_karton", "napomena_3", "stavka_4_evropski_izvestaj", "napomena_4",
+        "stavka_5_prsluk", "napomena_5", "stavka_6_drzac_za_telefon", "napomena_6",
+        "stavka_7_kabl_vozac", "napomena_7", "stavka_8_kabl_klijent_c", "napomena_8",
+        "stavka_9_kabl_klijent_iphone", "napomena_9", "stavka_10_voda_drzaci", "napomena_10",
+        "stavka_11_voda_naslon", "napomena_11", "stavka_12_voda_prtljaznik", "napomena_12",
+        "stavka_13_vlazne_maramice", "napomena_13", "stavka_14_bezbednosni_komplet", "napomena_14",
+        "stavka_15_kisobran", "napomena_15", "stavka_16_buster", "napomena_16",
+        "stavka_17_sediste", "napomena_17", "stavka_18_tablica_docek", "napomena_18",
+        "stavka_19_dodatak_pojas", "napomena_19", "stavka_20_tag", "napomena_20",
+        "stavka_21_kartica_rampa", "napomena_21",
+        "predaje_ime", "predaje_prezime", "predaje_telefon",
+        "preuzima_ime", "preuzima_prezime", "preuzima_telefon"
+    ]
     
+    placeholders = ", ".join(["?"] * len(podaci))
+    kolone_str = ", ".join(kolone)
+    
+    sql = f"INSERT INTO primopredaja ({kolone_str}) VALUES ({placeholders})"
+    
+    kursor.execute(sql, podaci)
     konekcija.commit()
     konekcija.close()
 
