@@ -2,12 +2,51 @@ import streamlit as st
 import sqlite3
 from datetime import datetime
 
-# Naziv baze koju smo malopre kreirali
+# 1. MORA BITI PRVA STREAMLIT KOMANDA U KODU I POZIVA SE SAMO JEDNOM!
+st.set_page_config(page_title="Primopredaja vozila", page_layout="centered")
+
+# Naziv baze
 DB_NAME = 'evidencija_vozila.db'
 
 def upisi_u_bazu(podaci):
     konekcija = sqlite3.connect(DB_NAME)
     kursor = konekcija.cursor()
+    
+    kursor.execute('''
+        CREATE TABLE IF NOT EXISTS primopredaja (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            datum TEXT NOT NULL,
+            vreme TEXT NOT NULL,
+            registracija TEXT NOT NULL,
+            stavka_1_saobracajna TEXT, napomena_1 TEXT,
+            stavka_2_polisa TEXT, napomena_2 TEXT,
+            stavka_3_zeleni_karton TEXT, napomena_3 TEXT,
+            stavka_4_evropski_izvestaj TEXT, napomena_4 TEXT,
+            stavka_5_prsluk TEXT, napomena_5 TEXT,
+            stavka_6_drzac_za_telefon TEXT, napomena_6 TEXT,
+            stavka_7_kabl_vozac TEXT, napomena_7 TEXT,
+            stavka_8_kabl_klijent_c TEXT, napomena_8 TEXT,
+            stavka_9_kabl_klijent_iphone TEXT, napomena_9 TEXT,
+            stavka_10_voda_drzaci TEXT, napomena_10 TEXT,
+            stavka_11_voda_naslon TEXT, napomena_11 TEXT,
+            stavka_12_voda_prtljaznik TEXT, napomena_12 TEXT,
+            stavka_13_vlazne_maramice TEXT, napomena_13 TEXT,
+            stavka_14_bezbednosni_komplet TEXT, napomena_14 TEXT,
+            stavka_15_kisobran TEXT, napomena_15 TEXT,
+            stavka_16_buster TEXT, napomena_16 TEXT,
+            stavka_17_sediste TEXT, napomena_17 TEXT,
+            stavka_18_tablica_docek TEXT, napomena_18 TEXT,
+            stavka_19_dodatak_pojas TEXT, napomena_19 TEXT,
+            stavka_20_tag TEXT, napomena_20 TEXT,
+            stavka_21_kartica_rampa TEXT, napomena_21 TEXT,
+            predaje_ime TEXT NOT NULL,
+            predaje_prezime TEXT NOT NULL,
+            predaje_telefon TEXT NOT NULL,
+            preuzima_ime TEXT NOT NULL,
+            preuzima_prezime TEXT NOT NULL,
+            preuzima_telefon TEXT NOT NULL
+        )
+    ''')
     
     kursor.execute('''
         INSERT INTO primopredaja (
@@ -41,13 +80,10 @@ def upisi_u_bazu(podaci):
     konekcija.commit()
     konekcija.close()
 
-# Izgled aplikacije na telefonu
-st.set_page_config(page_title="Primopredaja vozila", page_layout="centered")
-
+# 2. Sad idu elementi interfejsa
 st.title("🚗 Primopredaja Vozila")
 st.write("Popunite listu provere stanja elemenata u vozilu.")
 
-# Automatski datum i vreme
 trenutni_datum = datetime.now().strftime("%Y-%m-%d")
 trenutno_vreme = datetime.now().strftime("%H:%M")
 
@@ -58,7 +94,6 @@ registracija = st.text_input("Registracija vozila (npr. BG 1010 AB)", placeholde
 st.markdown("---")
 st.subheader("Provera elemenata")
 
-# Lista svih 21 stavki sa vašeg obrasca
 stavke_nazivi = [
     "1. Saobraćajna", "2. Polisa", "3. Zeleni karton (opciono)", "4. Evropski izveštaj",
     "5. Prsluk (u kabini, vozačeva vrata)", "6. Držač za telefon (podešen prema preporuci)",
@@ -107,7 +142,6 @@ if st.button("Pošalji izveštaj", type="primary", use_container_width=True):
     if not registracija or not p_ime or not uz_ime:
         st.error("Molimo popunite registraciju i imena vozača!")
     else:
-        # Pakovanje svih podataka u listu redosledom kojim odgovaraju bazi
         podaci_za_upis = [
             trenutni_datum, trenutno_vreme, registracija,
             *rezultati_forme,
