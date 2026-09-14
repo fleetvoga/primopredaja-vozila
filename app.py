@@ -3,7 +3,7 @@ import sqlite3
 from datetime import datetime
 
 # OVO MORA BITI PRVO - PRE BILO KOG DRUGOG KODA ILI IMPORTA
-st.set_page_config(page_title="Primopredaja vozila", page_layout="centered")
+# st.set_page_config(page_title="Primopredaja vozila", page_layout="centered")
 
 # Naziv baze
 DB_NAME = 'evidencija_vozila.db'
