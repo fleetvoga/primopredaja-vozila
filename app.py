@@ -2,7 +2,7 @@ import streamlit as st
 import sqlite3
 from datetime import datetime
 
-# 1. MORA BITI PRVA STREAMLIT KOMANDA U KODU I POZIVA SE SAMO JEDNOM!
+# OVO MORA BITI PRVO - PRE BILO KOG DRUGOG KODA ILI IMPORTA
 st.set_page_config(page_title="Primopredaja vozila", page_layout="centered")
 
 # Naziv baze
@@ -80,7 +80,7 @@ def upisi_u_bazu(podaci):
     konekcija.commit()
     konekcija.close()
 
-# 2. Sad idu elementi interfejsa
+# Interfejs aplikacije
 st.title("🚗 Primopredaja Vozila")
 st.write("Popunite listu provere stanja elemenata u vozilu.")
 
@@ -99,7 +99,7 @@ stavke_nazivi = [
     "5. Prsluk (u kabini, vozačeva vrata)", "6. Držač za telefon (podešen prema preporuci)",
     "7. Kabl za vozačev telefon (2m C)", "8. Kabl za klijenta (1m C)", "9. Kabl za klijenta (1m iPhone)",
     "10. Voda u držačima", "11. Dve vode u naslonu za ruku", "12. Voda u prtljažniku",
-    "13. Vlažne maramice na poziciji", "14. Bezbedonosni komplet", "15. Kišobran",
+    "13. Vlažne maramice na poziciji", "14. Bezbednosni komplet", "15. Kišobran",
     "16. Buster za decu", "17. Sedište za decu (opciono)", "18. Tablica za doček",
     "19. Dodatak za pojas", "20. TAG", "21. Kartica za rampu"
 ]
