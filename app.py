@@ -1,5 +1,6 @@
 import streamlit as st
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import json
 import gspread
 from google.oauth2.service_account import Credentials
@@ -78,8 +79,10 @@ st.markdown("""
 st.title("🚗 Primopredaja Vozila")
 st.write("Popunite listu provere stanja elemenata u vozilu.")
 
-trenutni_datum = datetime.now().strftime("%d-%m-%Y")
-trenutno_vreme = datetime.now().strftime("%H:%M")
+# Uzimamo tačno lokalno vreme za Beograd
+sada_beograd = datetime.now(ZoneInfo("Europe/Belgrade"))
+trenutni_datum = sada_beograd.strftime("%d-%m-%Y")
+trenutno_vreme = sada_beograd.strftime("%H:%M")
 
 st.info(f"📅 Datum: {trenutni_datum} | ⏰ Vreme: {trenutno_vreme}")
 registracija = st.text_input("Registracija vozila (npr. BG 1010 AB)", placeholder="BG _______")
@@ -139,10 +142,10 @@ if st.button("Pošalji izveštaj", type="primary", use_container_width=True):
             sheet = povezi_se_na_sheets()
             sheet.append_row(vrednosti, table_range='A1')
             
-            # Slanje email obaveštenja
+            # Slanje email obaveštenja sa tačnim lokalnim vremenom
             posalji_email_obavestenje(registracija, trenutni_datum, trenutno_vreme, p_ime, p_prezime, uz_ime, uz_prezime)
             
             st.success("Uspešno poslato i sačuvano u Google Tabeli! Email obaveštenje je poslato.")
             st.balloons()
         except Exception as e:
-            st.error(f"Greška pri upisu u tabelu: {e}")
+            st.error(f"Došlo je do greške pri upisu u tabelu: {e}")
