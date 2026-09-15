@@ -12,12 +12,16 @@ SCOPES = [
 ]
 
 def povezi_se_na_sheets():
-    # Uzima kredencijale direktno iz Streamlit Secrets (ceo gcp_service_account ili gsheet sekcija)
     creds_dict = dict(st.secrets["gcp_service_account"])
+    
+    # Popravka za newline karaktere i Windows \r\n u privatnom ključu
+    pk = creds_dict["private_key"]
+    pk = pk.replace("\\n", "\n").replace("\r\n", "\n")
+    creds_dict["private_key"] = pk
+
     creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     gc = gspread.authorize(creds)
-    # Ovde upisi tacno ime tvoje Google tabele
-    sh = gc.open("Evidencija opreme za vozila") 
+    sh = gc.open("Evidencija_Primopredaja_Vozila") 
     return sh.get_worksheet(0)
 
 # --- MAPIRANJE SKRAĆENIH NAZIVA ZA PRIKAZ ---
