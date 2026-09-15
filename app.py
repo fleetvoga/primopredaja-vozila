@@ -2,11 +2,23 @@ import streamlit as st
 from datetime import datetime
 import pandas as pd
 import io
-from streamlit_gsheets import GSheetsConnection
+import gspread
+from google.oauth2.service_account import Credentials
 
-# --- KONFIGURACIJA ZA GOOGLE SHEETS ---
-# Povezivanje se oslanja na [connections.gsheets] sekciju koju ste uneli u Streamlit Secrets
-conn = st.connection("gsheets", type=GSheetsConnection)
+# --- KONFIGURACIJA ZA GOOGLE SHEETS PREKO GSPREAD ---
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
+
+def povezi_se_na_sheets():
+    # Uzima kredencijale direktno iz Streamlit Secrets (ceo gcp_service_account ili gsheet sekcija)
+    creds_dict = dict(st.secrets["gcp_service_account"])
+    creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+    gc = gspread.authorize(creds)
+    # Ovde upisi tacno ime tvoje Google tabele
+    sh = gc.open("Evidencija_Primopredaja_Vozila") 
+    return sh.get_worksheet(0)
 
 # --- MAPIRANJE SKRAĆENIH NAZIVA ZA PRIKAZ ---
 skraceni_nazivi = {
@@ -96,37 +108,19 @@ if izbor == "📝 Nova primopredaja (Vozači)":
         if not registracija or not p_ime or not uz_ime:
             st.error("Molimo popunite registraciju i imena oba vozača!")
         else:
-            kolone_redosled = [
-                "datum", "vreme", "registracija",
-                "stavka_1_saobracajna", "napomena_1", "stavka_2_polisa", "napomena_2",
-                "stavka_3_zeleni_karton", "napomena_3", "stavka_4_evropski_izvestaj", "napomena_4",
-                "stavka_5_prsluk", "napomena_5", "stavka_6_drzac_za_telefon", "napomena_6",
-                "stavka_7_kabl_vozac", "napomena_7", "stavka_8_kabl_klijent_c", "napomena_8",
-                "stavka_9_kabl_klijent_iphone", "napomena_9", "stavka_10_voda_drzaci", "napomena_10",
-                "stavka_11_voda_naslon", "napomena_11", "stavka_12_voda_prtljaznik", "napomena_12",
-                "stavka_13_vlazne_maramice", "napomena_13", "stavka_14_bezbednosni_komplet", "napomena_14",
-                "stavka_15_kisobran", "napomena_15", "stavka_16_buster", "napomena_16",
-                "stavka_17_sediste", "napomena_17", "stavka_18_tablica_docek", "napomena_18",
-                "stavka_19_dodatak_pojas", "napomena_19", "stavka_20_tag", "napomena_20",
-                "stavka_21_kartica_rampa", "napomena_21",
-                "predaje_ime", "predaje_prezime", "predaje_telefon",
-                "preuzima_ime", "preuzima_prezime", "preuzima_telefon"
-            ]
-            
             vrednosti = [
                 trenutni_datum, trenutno_vreme, registracija,
                 *rezultati_forme,
                 p_ime, p_prezime, p_tel,
                 uz_ime, uz_prezime, uz_tel
             ]
-            
-            novi_df = pd.DataFrame([vrednosti], columns=kolone_redosled)
-            existing_df = conn.read(ttl="0s")
-            updated_df = pd.concat([existing_df, novi_df], ignore_index=True)
-            conn.update(data=updated_df)
-            
-            st.success("Uspešno poslato i sačuvano u Google Tabeli!")
-            st.balloons()
+            try:
+                sheet = povezi_se_na_sheets()
+                sheet.append_row(vrednosti)
+                st.success("Uspešno poslato i sačuvano u Google Tabeli!")
+                st.balloons()
+            except Exception as e:
+                st.error(f"Greška pri upisu u tabelu: {e}")
 
 elif izbor == "📊 Admin Pregled (Samo za Vas)":
     st.title("🔐 Admin Panel")
@@ -141,7 +135,9 @@ elif izbor == "📊 Admin Pregled (Samo za Vas)":
     st.subheader("Pregled svih sačuvanih izveštaja")
 
     try:
-        df = conn.read(ttl="0s")
+        sheet = povezi_se_na_sheets()
+        data = sheet.get_all_records()
+        df = pd.DataFrame(data)
 
         if df.empty:
             st.info("Google Tabela je trenutno prazna. Još uvek nema poslatih izveštaja.")
@@ -149,7 +145,7 @@ elif izbor == "📊 Admin Pregled (Samo za Vas)":
             # Skraćivanje napomena na samo prvu reč za pregled
             df_prikaz = df.copy()
             for kolona in df_prikaz.columns:
-                if kolona.startswith("napomena_"):
+                if str(kolona).startswith("napomena_"):
                     df_prikaz[kolona] = df_prikaz[kolona].astype(str).apply(
                         lambda x: x.split()[0] if x != "nan" and x.strip() != "" else ""
                     )
