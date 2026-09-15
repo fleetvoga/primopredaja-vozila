@@ -1,7 +1,8 @@
 import streamlit as st
-from datetime import datetime
+from datetime datetime
 import pandas as pd
 import io
+import json
 import gspread
 from google.oauth2.service_account import Credentials
 
@@ -11,15 +12,13 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-import json
-import gspread
-from google.oauth2.service_account import Credentials
-
 def povezi_se_na_sheets():
     # Učitavamo ceo JSON string iz Secrets-a i pretvaramo ga u Python rečnik
     creds_dict = json.loads(st.secrets["gcp_json"])
     creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     gc = gspread.authorize(creds)
+    
+    # Preporuka: Možeš otvoriti i preko linka (gc.open_by_url) da izbegneš greške u imenu
     sh = gc.open("Evidencija_Primopredaja_Vozila") 
     return sh.get_worksheet(0)
 
@@ -145,7 +144,6 @@ elif izbor == "📊 Admin Pregled (Samo za Vas)":
         if df.empty:
             st.info("Google Tabela je trenutno prazna. Još uvek nema poslatih izveštaja.")
         else:
-            # Skraćivanje napomena na samo prvu reč za pregled
             df_prikaz = df.copy()
             for kolona in df_prikaz.columns:
                 if str(kolona).startswith("napomena_"):
@@ -153,13 +151,11 @@ elif izbor == "📊 Admin Pregled (Samo za Vas)":
                         lambda x: x.split()[0] if x != "nan" and x.strip() != "" else ""
                     )
 
-            # Preimenovanje kolona prema rečniku skraćenica
             df_prikaz = df_prikaz.rename(columns=skraceni_nazivi)
 
             st.write(f"Ukupno unetih izveštaja: {len(df_prikaz)}")
             st.dataframe(df_prikaz, use_container_width=True)
 
-            # Dugme za preuzimanje originalnog Excel-a
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 df.to_excel(writer, index=False, sheet_name='Primopredaje')
