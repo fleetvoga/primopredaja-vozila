@@ -145,7 +145,7 @@ if st.button("Pošalji izveštaj", type="primary", use_container_width=True):
             # Slanje email obaveštenja sa tačnim lokalnim vremenom
             posalji_email_obavestenje(registracija, trenutni_datum, trenutno_vreme, p_ime, p_prezime, uz_ime, uz_prezime)
             
-            st.success("Uspešno poslato i sačuvano u Google Tabeli! Email obaveštenje je poslato.")
+            st.success("Uspešno poslato!!!")
             st.balloons()
         except Exception as e:
             st.error(f"Došlo je do greške pri upisu u tabelu: {e}")
