@@ -13,14 +13,35 @@ SCOPES = [
 ]
 
 def povezi_se_na_sheets():
-    # Učitavamo ceo JSON string iz Secrets-a i pretvaramo ga u Python rečnik
     creds_dict = json.loads(st.secrets["gcp_json"])
     creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     gc = gspread.authorize(creds)
-    
-    # Preporuka: Možeš otvoriti i preko linka (gc.open_by_url) da izbegneš greške u imenu
+    # Možeš zameniti i sa gc.open_by_url("LINK_DO_TABELE") ako želiš 100% sigurnost
     sh = gc.open("Evidencija opreme za vozila") 
     return sh.get_worksheet(0)
+
+# --- DODATNI CSS ZA ESTETIKU I KRUPNIJA SLOVA ---
+st.set_page_config(page_title="Primopredaja Vozila", layout="wide")
+st.markdown("""
+<style>
+    /* Smanjenje gornje margine da aplikacija počinje od vrha */
+    .block-container {
+        padding-top: 1.5rem !important;
+        padding-bottom: 2rem !important;
+    }
+    /* Povećanje opštih slova za otprilike 2 veličine */
+    html, body, [class*="css"] {
+        font-size: 1.15rem !important;
+    }
+    /* Posebno krupno polje za registraciju vozila */
+    div[data-testid="stTextInput"] input[placeholder*="BG"] {
+        font-size: 1.6rem !important;
+        font-weight: bold !important;
+        height: 3.2rem !important;
+        letter-spacing: 2px !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # --- MAPIRANJE SKRAĆENIH NAZIVA ZA PRIKAZ ---
 skraceni_nazivi = {
@@ -59,7 +80,8 @@ if izbor == "📝 Nova primopredaja (Vozači)":
     st.title("🚗 Primopredaja Vozila")
     st.write("Popunite listu provere stanja elemenata u vozilu.")
 
-    trenutni_datum = datetime.now().strftime("%Y-%m-%d")
+    # Datum u formatu dd-mm-yyyy
+    trenutni_datum = datetime.now().strftime("%d-%m-%Y")
     trenutno_vreme = datetime.now().strftime("%H:%M")
 
     st.info(f"📅 Datum: {trenutni_datum} | ⏰ Vreme: {trenutno_vreme}")
@@ -164,7 +186,7 @@ elif izbor == "📊 Admin Pregled (Samo za Vas)":
             st.download_button(
                 label="📥 Preuzmi kompletan Excel izveštaj (.xlsx)",
                 data=processed_data,
-                file_name=f"Evidencija_Vozila_{datetime.now().strftime('%Y-%m-%d')}.xlsx",
+                file_name=f"Evidencija_Vozila_{datetime.now().strftime('%d-%m-%Y')}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 type="primary",
                 use_container_width=True
