@@ -85,7 +85,7 @@ if izbor == "📝 Nova primopredaja (Vozači)":
     trenutno_vreme = datetime.now().strftime("%H:%M")
 
     st.info(f"📅 Datum: {trenutni_datum} | ⏰ Vreme: {trenutno_vreme}")
-    registracija = st.text_input("Registracija vozila (npr. BG 1010 AB)", placeholder="BG _______")
+    registracija = st.text_input("Registracija vozila (npr. BG1010AB)", placeholder="BG _______")
 
     st.markdown("---")
     st.subheader("Provera elemenata")
