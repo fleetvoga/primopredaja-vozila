@@ -17,7 +17,7 @@ def povezi_se_na_sheets():
     creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     gc = gspread.authorize(creds)
     # Možeš zameniti i sa gc.open_by_url("LINK_DO_TABELE") ako želiš 100% sigurnost
-    sh = gc.open("Evidencija opreme za vozila") 
+    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1BhuM_b7K_G8GMUQCDhVSJc8eSHin_-Qfe3mkTWTVuS8/edit?gid=0#gid=0") 
     return sh.get_worksheet(0)
 
 # --- DODATNI CSS ZA ESTETIKU I KRUPNIJA SLOVA ---
