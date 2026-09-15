@@ -1,33 +1,12 @@
 import streamlit as st
 from datetime import datetime
 import pandas as pd
-import gspread
-from google.oauth2.service_account import Credentials
+import io
+from streamlit_gsheets import GSheetsConnection
 
 # --- KONFIGURACIJA ZA GOOGLE SHEETS ---
-# Podešavanje kredencijala preko st.secrets u Streamlit Cloud-u
-SCOPES = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive"
-]
-
-def povezi_se_na_sheets():
-    # Uitaj kredencijale iz Streamlit Secrets
-    creds_dict = dict(st.secrets["gcp_service_account"])
-    creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
-    gc = gspread.authorize(creds)
-    # Ovde upišite tačan naziv vaše Google tabele
-    sh = gc.open("Evidencija_Primopredaja_Vozila")
-    return sh.get_worksheet(0)
-
-def upisi_u_google_tabelu(podaci):
-    worksheet = povezi_se_na_sheets()
-    worksheet.append_row(podaci)
-
-def ucitaj_iz_google_tabele():
-    worksheet = povezi_se_na_sheets()
-    data = worksheet.get_all_records()
-    return pd.DataFrame(data)
+# Povezivanje se oslanja na [connections.gsheets] sekciju koju ste uneli u Streamlit Secrets
+conn = st.connection("gsheets", type=GSheetsConnection)
 
 # --- MAPIRANJE SKRAĆENIH NAZIVA ZA PRIKAZ ---
 skraceni_nazivi = {
@@ -59,7 +38,6 @@ skraceni_nazivi = {
     "preuzima_ime": "U_Ime", "preuzima_prezime": "U_Prz", "preuzima_telefon": "U_Tel"
 }
 
-# --- NAVIGACIJA ---
 st.sidebar.title("Navigacija")
 izbor = st.sidebar.radio("Izaberite opciju:", ["📝 Nova primopredaja (Vozači)", "📊 Admin Pregled (Samo za Vas)"])
 
@@ -118,13 +96,35 @@ if izbor == "📝 Nova primopredaja (Vozači)":
         if not registracija or not p_ime or not uz_ime:
             st.error("Molimo popunite registraciju i imena oba vozača!")
         else:
-            podaci_za_upis = [
+            kolone_redosled = [
+                "datum", "vreme", "registracija",
+                "stavka_1_saobracajna", "napomena_1", "stavka_2_polisa", "napomena_2",
+                "stavka_3_zeleni_karton", "napomena_3", "stavka_4_evropski_izvestaj", "napomena_4",
+                "stavka_5_prsluk", "napomena_5", "stavka_6_drzac_za_telefon", "napomena_6",
+                "stavka_7_kabl_vozac", "napomena_7", "stavka_8_kabl_klijent_c", "napomena_8",
+                "stavka_9_kabl_klijent_iphone", "napomena_9", "stavka_10_voda_drzaci", "napomena_10",
+                "stavka_11_voda_naslon", "napomena_11", "stavka_12_voda_prtljaznik", "napomena_12",
+                "stavka_13_vlazne_maramice", "napomena_13", "stavka_14_bezbednosni_komplet", "napomena_14",
+                "stavka_15_kisobran", "napomena_15", "stavka_16_buster", "napomena_16",
+                "stavka_17_sediste", "napomena_17", "stavka_18_tablica_docek", "napomena_18",
+                "stavka_19_dodatak_pojas", "napomena_19", "stavka_20_tag", "napomena_20",
+                "stavka_21_kartica_rampa", "napomena_21",
+                "predaje_ime", "predaje_prezime", "predaje_telefon",
+                "preuzima_ime", "preuzima_prezime", "preuzima_telefon"
+            ]
+            
+            vrednosti = [
                 trenutni_datum, trenutno_vreme, registracija,
                 *rezultati_forme,
                 p_ime, p_prezime, p_tel,
                 uz_ime, uz_prezime, uz_tel
             ]
-            upisi_w = upisi_u_google_tabelu(podaci_za_upis)
+            
+            novi_df = pd.DataFrame([vrednosti], columns=kolone_redosled)
+            existing_df = conn.read(ttl="0s")
+            updated_df = pd.concat([existing_df, novi_df], ignore_index=True)
+            conn.update(data=updated_df)
+            
             st.success("Uspešno poslato i sačuvano u Google Tabeli!")
             st.balloons()
 
@@ -141,10 +141,10 @@ elif izbor == "📊 Admin Pregled (Samo za Vas)":
     st.subheader("Pregled svih sačuvanih izveštaja")
 
     try:
-        df = ucitaj_iz_google_tabele()
+        df = conn.read(ttl="0s")
 
         if df.empty:
-            st.info("Google Tabela je trenutno prazna. Jošvek nema poslatih izveštaja.")
+            st.info("Google Tabela je trenutno prazna. Još uvek nema poslatih izveštaja.")
         else:
             # Skraćivanje napomena na samo prvu reč za pregled
             df_prikaz = df.copy()
@@ -161,7 +161,6 @@ elif izbor == "📊 Admin Pregled (Samo za Vas)":
             st.dataframe(df_prikaz, use_container_width=True)
 
             # Dugme za preuzimanje originalnog Excel-a
-            import io
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 df.to_excel(writer, index=False, sheet_name='Primopredaje')
