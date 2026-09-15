@@ -5,6 +5,9 @@ import io
 import json
 import gspread
 from google.oauth2.service_account import Credentials
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # --- KONFIGURACIJA ZA GOOGLE SHEETS PREKO GSPREAD ---
 SCOPES = [
@@ -16,24 +19,54 @@ def povezi_se_na_sheets():
     creds_dict = json.loads(st.secrets["gcp_json"])
     creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     gc = gspread.authorize(creds)
-    # Možeš zameniti i sa gc.open_by_url("LINK_DO_TABELE") ako želiš 100% sigurnost
     sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1BhuM_b7K_G8GMUQCDhVSJc8eSHin_-Qfe3mkTWTVuS8/edit?gid=0#gid=0") 
     return sh.get_worksheet(0)
+
+# --- FUNKCIJA ZA SLANJE EMAIL OBAVEŠTENJA ---
+def posalji_email_obavestenje(registracija, datum, vreme, p_ime, p_prezime, uz_ime, uz_prezime):
+    try:
+        sender_email = st.secrets["EMAIL_SADRZAJ"]
+        sender_password = st.secrets["EMAIL_PASS"]
+        receiver_email = st.secrets["EMAIL_PRIMALAC"]
+
+        subject = f"🔔 Nova primopredaja vozila: {registracija}"
+        body = f"""
+        Poštovani,
+        
+        Izvršena je nova primopredaja vozila:
+
+        🚗 Registracija: {registracija}
+        📅 Datum i vreme: {datum} u {vreme}
+        
+        👤 Predaje: {p_ime} {p_prezime}
+        👤 Preuzima: {uz_ime} {uz_prezime}
+        
+        Pregledajte Google Tabelu za detalje.
+        """
+
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = receiver_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain', 'utf-8'))
+
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+    except Exception as e:
+        print(f"Greška pri slanju emaila: {e}")
 
 # --- DODATNI CSS ZA ESTETIKU I KRUPNIJA SLOVA ---
 st.set_page_config(page_title="Primopredaja Vozila", layout="wide")
 st.markdown("""
 <style>
-    /* Smanjenje gornje margine da aplikacija počinje od vrha */
     .block-container {
         padding-top: 1.5rem !important;
         padding-bottom: 2rem !important;
     }
-    /* Povećanje opštih slova za otprilike 2 veličine */
     html, body, [class*="css"] {
         font-size: 1.15rem !important;
     }
-    /* Posebno krupno polje za registraciju vozila */
     div[data-testid="stTextInput"] input[placeholder*="BG"] {
         font-size: 1.6rem !important;
         font-weight: bold !important;
@@ -80,12 +113,11 @@ if izbor == "📝 Nova primopredaja (Vozači)":
     st.title("🚗 Primopredaja Vozila")
     st.write("Popunite listu provere stanja elemenata u vozilu.")
 
-    # Datum u formatu dd-mm-yyyy
     trenutni_datum = datetime.now().strftime("%d-%m-%Y")
     trenutno_vreme = datetime.now().strftime("%H:%M")
 
     st.info(f"📅 Datum: {trenutni_datum} | ⏰ Vreme: {trenutno_vreme}")
-    registracija = st.text_input("Registracija vozila (npr. BG1010AB)", placeholder="BG _______")
+    registracija = st.text_input("Registracija vozila (npr. BG 1010 AB)", placeholder="BG _______")
 
     st.markdown("---")
     st.subheader("Provera elemenata")
@@ -141,7 +173,11 @@ if izbor == "📝 Nova primopredaja (Vozači)":
             try:
                 sheet = povezi_se_na_sheets()
                 sheet.append_row(vrednosti)
-                st.success("Uspešno poslato i sačuvano u Google Tabeli!")
+                
+                # Slanje email obaveštenja
+                posalji_email_obavestenje(registracija, trenutni_datum, trenutno_vreme, p_ime, p_prezime, uz_ime, uz_prezime)
+                
+                st.success("Uspešno poslato i sačuvano u Google Tabeli! Email obaveštenje je poslate.")
                 st.balloons()
             except Exception as e:
                 st.error(f"Greška pri upisu u tabelu: {e}")
