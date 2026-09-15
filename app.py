@@ -19,7 +19,7 @@ def povezi_se_na_sheets():
     creds_dict = json.loads(st.secrets["gcp_json"])
     creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     gc = gspread.authorize(creds)
-    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1BhuM_b7K_G8GMUQCDhVSJc8eSHin_-Qfe3mkTWTVuS8/edit?pli=1&gid=0#gid=0") 
+    sh = gc.open("Evidencija opreme za vozila") 
     return sh.get_worksheet(0)
 
 # --- FUNKCIJA ZA SLANJE EMAIL OBAVEŠTENJA ---
