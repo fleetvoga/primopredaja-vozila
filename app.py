@@ -17,7 +17,7 @@ def povezi_se_na_sheets():
     creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     gc = gspread.authorize(creds)
     # Ovde upisi tacno ime tvoje Google tabele
-    sh = gc.open("Evidencija_Primopredaja_Vozila") 
+    sh = gc.open("Evidencija opreme za vozila") 
     return sh.get_worksheet(0)
 
 # --- MAPIRANJE SKRAĆENIH NAZIVA ZA PRIKAZ ---
