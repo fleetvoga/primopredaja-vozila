@@ -172,7 +172,7 @@ if izbor == "📝 Nova primopredaja (Vozači)":
             ]
             try:
                 sheet = povezi_se_na_sheets()
-                sheet.append_row(vrednosti)
+                sheet.append_row(vrednosti, table_range='A1')
                 
                 # Slanje email obaveštenja
                 posalji_email_obavestenje(registracija, trenutni_datum, trenutno_vreme, p_ime, p_prezime, uz_ime, uz_prezime)
