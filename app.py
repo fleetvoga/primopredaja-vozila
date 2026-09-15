@@ -1,81 +1,65 @@
 import streamlit as st
-import sqlite3
 from datetime import datetime
 import pandas as pd
-import io
+import gspread
+from google.oauth2.service_account import Credentials
 
-DB_NAME = 'evidencija_vozila.db'
+# --- KONFIGURACIJA ZA GOOGLE SHEETS ---
+# Podešavanje kredencijala preko st.secrets u Streamlit Cloud-u
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
 
-def inicijalizuj_bazu():
-    konekcija = sqlite3.connect(DB_NAME)
-    kursor = konekcija.cursor()
-    kursor.execute('''
-        CREATE TABLE IF NOT EXISTS primopredaja (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            datum TEXT NOT NULL,
-            vreme TEXT NOT NULL,
-            registracija TEXT NOT NULL,
-            stavka_1_saobracajna TEXT, napomena_1 TEXT,
-            stavka_2_polisa TEXT, napomena_2 TEXT,
-            stavka_3_zeleni_karton TEXT, napomena_3 TEXT,
-            stavka_4_evropski_izvestaj TEXT, napomena_4 TEXT,
-            stavka_5_prsluk TEXT, napomena_5 TEXT,
-            stavka_6_drzac_za_telefon TEXT, napomena_6 TEXT,
-            stavka_7_kabl_vozac TEXT, napomena_7 TEXT,
-            stavka_8_kabl_klijent_c TEXT, napomena_8 TEXT,
-            stavka_9_kabl_klijent_iphone TEXT, napomena_9 TEXT,
-            stavka_10_voda_drzaci TEXT, napomena_10 TEXT,
-            stavka_11_voda_naslon TEXT, napomena_11 TEXT,
-            stavka_12_voda_prtljaznik TEXT, napomena_12 TEXT,
-            stavka_13_vlazne_maramice TEXT, napomena_13 TEXT,
-            stavka_14_bezbednosni_komplet TEXT, napomena_14 TEXT,
-            stavka_15_kisobran TEXT, napomena_15 TEXT,
-            stavka_16_buster TEXT, napomena_16 TEXT,
-            stavka_17_sediste TEXT, napomena_17 TEXT,
-            stavka_18_tablica_docek TEXT, napomena_18 TEXT,
-            stavka_19_dodatak_pojas TEXT, napomena_19 TEXT,
-            stavka_20_tag TEXT, napomena_20 TEXT,
-            stavka_21_kartica_rampa TEXT, napomena_21 TEXT,
-            predaje_ime TEXT,
-            predaje_prezime TEXT,
-            predaje_telefon TEXT,
-            preuzima_ime TEXT,
-            preuzima_prezime TEXT,
-            preuzima_telefon TEXT
-        )
-    ''')
-    konekcija.commit()
-    konekcija.close()
+def povezi_se_na_sheets():
+    # Uitaj kredencijale iz Streamlit Secrets
+    creds_dict = dict(st.secrets["gcp_service_account"])
+    creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+    gc = gspread.authorize(creds)
+    # Ovde upišite tačan naziv vaše Google tabele
+    sh = gc.open("Evidencija_Primopredaja_Vozila")
+    return sh.get_worksheet(0)
 
-inicijalizuj_bazu()
+def upisi_u_google_tabelu(podaci):
+    worksheet = povezi_se_na_sheets()
+    worksheet.append_row(podaci)
 
-def upisi_u_bazu(podaci):
-    konekcija = sqlite3.connect(DB_NAME)
-    kursor = konekcija.cursor()
-    kolone = [
-        "datum", "vreme", "registracija",
-        "stavka_1_saobracajna", "napomena_1", "stavka_2_polisa", "napomena_2",
-        "stavka_3_zeleni_karton", "napomena_3", "stavka_4_evropski_izvestaj", "napomena_4",
-        "stavka_5_prsluk", "napomena_5", "stavka_6_drzac_za_telefon", "napomena_6",
-        "stavka_7_kabl_vozac", "napomena_7", "stavka_8_kabl_klijent_c", "napomena_8",
-        "stavka_9_kabl_klijent_iphone", "napomena_9", "stavka_10_voda_drzaci", "napomena_10",
-        "stavka_11_voda_naslon", "napomena_11", "stavka_12_voda_prtljaznik", "napomena_12",
-        "stavka_13_vlazne_maramice", "napomena_13", "stavka_14_bezbednosni_komplet", "napomena_14",
-        "stavka_15_kisobran", "napomena_15", "stavka_16_buster", "napomena_16",
-        "stavka_17_sediste", "napomena_17", "stavka_18_tablica_docek", "napomena_18",
-        "stavka_19_dodatak_pojas", "napomena_19", "stavka_20_tag", "napomena_20",
-        "stavka_21_kartica_rampa", "napomena_21",
-        "predaje_ime", "predaje_prezime", "predaje_telefon",
-        "preuzima_ime", "preuzima_prezime", "preuzima_telefon"
-    ]
-    placeholders = ", ".join(["?"] * len(podaci))
-    kolone_str = ", ".join(kolone)
-    sql = f"INSERT INTO primopredaja ({kolone_str}) VALUES ({placeholders})"
-    kursor.execute(sql, podaci)
-    konekcija.commit()
-    konekcija.close()
+def ucitaj_iz_google_tabele():
+    worksheet = povezi_se_na_sheets()
+    data = worksheet.get_all_records()
+    return pd.DataFrame(data)
 
-# Glavni meni u bočnom delu (sidebar)
+# --- MAPIRANJE SKRAĆENIH NAZIVA ZA PRIKAZ ---
+skraceni_nazivi = {
+    "datum": "Datum",
+    "vreme": "Vreme",
+    "registracija": "Reg",
+    "stavka_1_saobracajna": "1. S", "napomena_1": "N.1",
+    "stavka_2_polisa": "2. P", "napomena_2": "N.2",
+    "stavka_3_zeleni_karton": "3. ZK", "napomena_3": "N.3",
+    "stavka_4_evropski_izvestaj": "4. EI", "napomena_4": "N.4",
+    "stavka_5_prsluk": "5. Prs", "napomena_5": "N.5",
+    "stavka_6_drzac_za_telefon": "6. Drz", "napomena_6": "N.6",
+    "stavka_7_kabl_vozac": "7. KabV", "napomena_7": "N.7",
+    "stavka_8_kabl_klijent_c": "8. KabC", "napomena_8": "N.8",
+    "stavka_9_kabl_klijent_iphone": "9. KabI", "napomena_9": "N.9",
+    "stavka_10_voda_drzaci": "V_DR", "napomena_10": "N.10",
+    "stavka_11_voda_naslon": "V_NAS", "napomena_11": "N.11",
+    "stavka_12_voda_prtljaznik": "V_PRT", "napomena_12": "N.12",
+    "stavka_13_vlazne_maramice": "V_MAR", "napomena_13": "N.13",
+    "stavka_14_bezbednosni_komplet": "BEZ", "napomena_14": "N.14",
+    "stavka_15_kisobran": "KIS", "napomena_15": "N.15",
+    "stavka_16_buster": "BUS", "napomena_16": "N.16",
+    "stavka_17_sediste": "SED", "napomena_17": "N.17",
+    "stavka_18_tablica_docek": "TAB", "napomena_18": "N.18",
+    "stavka_19_dodatak_pojas": "POJ", "napomena_19": "N.19",
+    "stavka_20_tag": "TAG", "napomena_20": "N.20",
+    "stavka_21_kartica_rampa": "RAM", "napomena_21": "N.21",
+    "predaje_ime": "P_Ime", "predaje_prezime": "P_Prz", "predaje_telefon": "P_Tel",
+    "preuzima_ime": "U_Ime", "preuzima_prezime": "U_Prz", "preuzima_telefon": "U_Tel"
+}
+
+# --- NAVIGACIJA ---
 st.sidebar.title("Navigacija")
 izbor = st.sidebar.radio("Izaberite opciju:", ["📝 Nova primopredaja (Vozači)", "📊 Admin Pregled (Samo za Vas)"])
 
@@ -140,15 +124,15 @@ if izbor == "📝 Nova primopredaja (Vozači)":
                 p_ime, p_prezime, p_tel,
                 uz_ime, uz_prezime, uz_tel
             ]
-            upisi_u_bazu(podaci_za_upis)
-            st.success("Uspešno poslato! Lista je sačuvana u bazi.")
+            upisi_w = upisi_u_google_tabelu(podaci_za_upis)
+            st.success("Uspešno poslato i sačuvano u Google Tabeli!")
             st.balloons()
 
 elif izbor == "📊 Admin Pregled (Samo za Vas)":
     st.title("🔐 Admin Panel")
     lozinka = st.text_input("Unesite lozinku za pristup bazi:", type="password")
 
-    if lozinka != "admin123":  # Ovde možete promeniti lozinku po želji
+    if lozinka != "admin123":
         if lozinka != "":
             st.error("Pogrešna lozinka!")
         st.stop()
@@ -157,16 +141,27 @@ elif izbor == "📊 Admin Pregled (Samo za Vas)":
     st.subheader("Pregled svih sačuvanih izveštaja")
 
     try:
-        konekcija = sqlite3.connect(DB_NAME)
-        df = pd.read_sql_query("SELECT * FROM primopredaja", konekcija)
-        konekcija.close()
+        df = ucitaj_iz_google_tabele()
 
         if df.empty:
-            st.info("Baza je trenutno prazna. Jošvek nema poslatih izveštaja.")
+            st.info("Google Tabela je trenutno prazna. Jošvek nema poslatih izveštaja.")
         else:
-            st.write(f"Ukupno unetih izveštaja: {len(df)}")
-            st.dataframe(df)
+            # Skraćivanje napomena na samo prvu reč za pregled
+            df_prikaz = df.copy()
+            for kolona in df_prikaz.columns:
+                if kolona.startswith("napomena_"):
+                    df_prikaz[kolona] = df_prikaz[kolona].astype(str).apply(
+                        lambda x: x.split()[0] if x != "nan" and x.strip() != "" else ""
+                    )
 
+            # Preimenovanje kolona prema rečniku skraćenica
+            df_prikaz = df_prikaz.rename(columns=skraceni_nazivi)
+
+            st.write(f"Ukupno unetih izveštaja: {len(df_prikaz)}")
+            st.dataframe(df_prikaz, use_container_width=True)
+
+            # Dugme za preuzimanje originalnog Excel-a
+            import io
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 df.to_excel(writer, index=False, sheet_name='Primopredaje')
@@ -181,4 +176,4 @@ elif izbor == "📊 Admin Pregled (Samo za Vas)":
                 use_container_width=True
             )
     except Exception as e:
-        st.info("Čekamo prvi unos izveštaja...")
+        st.error(f"Došlo je do greške prilikom čitanja Google Tabele: {e}")
