@@ -19,7 +19,7 @@ def povezi_se_na_sheets():
     gc = gspread.authorize(creds)
     
     # Preporuka: Možeš otvoriti i preko linka (gc.open_by_url) da izbegneš greške u imenu
-    sh = gc.open("Evidencija_Primopredaja_Vozila") 
+    sh = gc.open("Evidencija opreme za vozila") 
     return sh.get_worksheet(0)
 
 # --- MAPIRANJE SKRAĆENIH NAZIVA ZA PRIKAZ ---
