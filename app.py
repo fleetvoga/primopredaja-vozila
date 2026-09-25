@@ -57,7 +57,7 @@ if izbor == "📝 Nova primopredaja (Vozači)":
 
     st.markdown("---")
     st.subheader("Provera elemenata")
-=======
+
 import json
 import gspread
 from google.oauth2.service_account import Credentials
@@ -270,7 +270,7 @@ elif izbor == "📊 Admin Pregled (Samo za Vas)":
             )
     except Exception as e:
         st.error(f"Došlo je do greške prilikom čitanja Google Tabele: {e}")
-=======
+
 stavke_nazivi = [
     "1. Saobraćajna", "2. Polisa", "3. Zeleni karton (opciono)", "4. Evropski izveštaj",
     "5. Prsluk (u kabini, vozačeva vrata)", "6. Držač za telefon (podešen prema preporuci)",
