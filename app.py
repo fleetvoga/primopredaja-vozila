@@ -95,4 +95,4 @@ if st.button("Pošalji izveštaj", type="primary", use_container_width=True):
         conn.update(data=updated_df)
         
         st.success("Uspešno poslato i sačuvano u Google Tabeli!")
-        st.balloons()w
+        st.balloons()
