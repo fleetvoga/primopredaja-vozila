@@ -144,7 +144,7 @@ trenutno_vreme = sada_beograd.strftime("%H:%M")
 
 st.info(f"📅 Datum: {trenutni_datum} | ⏰ Vreme: {trenutno_vreme}")
 registracija = st.text_input("Registracija vozila (npr. BG 1010 AB)", placeholder="BG _______")
->>>>>>> 2b27b1ee3ef72c56249a59d932d69b16f59d2a09
+
 
     stavke_nazivi = [
         "1. Saobraćajna", "2. Polisa", "3. Zeleni karton (opciono)", "4. Evropski izveštaj",
