@@ -1,7 +1,6 @@
 import streamlit as st
 from datetime import datetime
 from zoneinfo import ZoneInfo
-<<<<<<< HEAD
 import pandas as pd
 import io
 from streamlit_gsheets import GSheetsConnection
@@ -157,7 +156,7 @@ registracija = st.text_input("Registracija vozila (npr. BG 1010 AB)", placeholde
         "22. Kartica za gorivo", "23. Marker i papir"
     ]
 
-<<<<<<< HEAD
+
     rezultati_forme = []
     for i, naziv in enumerate(stavke_nazivi, start=1):
         cols = st.columns([3, 1])
