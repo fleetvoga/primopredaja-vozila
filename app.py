@@ -331,4 +331,4 @@ if st.button("Pošalji izveštaj", type="primary", use_container_width=True):
             st.balloons()
         except Exception as e:
             st.error(f"Došlo je do greške pri upisu u tabelu: {e}")
->>>>>>> 2b27b1ee3ef72c56249a59d932d69b16f59d2a09
+
