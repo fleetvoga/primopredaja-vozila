@@ -3,6 +3,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import pandas as pd
 from streamlit_gsheets import GSheetsConnection
+import gspread
 
 # --- KONFIGURACIJA ZA GOOGLE SHEETS ---
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -73,12 +74,18 @@ if st.button("Pošalji izveštaj", type="primary", use_container_width=True):
             uz_ime, uz_prezime, uz_tel
         ]
         
-        # URL Google tablice
         spreadsheet_url = "https://docs.google.com/spreadsheets/d/1BhuM_b7K_G8GMUQCDhVSJc8eSHin_-Qfe3mkTWTVuS8/edit"
         
-        # Direktno dodavanje novog reda na kraj tablice preko gspread klijenta
-        sheet = conn.client.open_by_url(spreadsheet_url).sheet1
-        sheet.append_row(vrednosti)
-        
-        st.success("Uspešno poslato i sačuvano u Google Tabeli!")
-        st.balloons()
+        try:
+            # Povezivanje preko gspread koristeći service account podatke iz Streamlit secrets
+            credentials = dict(st.secrets["connections"]["gsheets"]["service_account"])
+            gc = gspread.service_account_from_dict(credentials)
+            
+            # Otvaranje tablice i dodavanje reda
+            sheet = gc.open_by_url(spreadsheet_url).sheet1
+            sheet.append_row(vrednosti)
+            
+            st.success("Uspešno poslato i sačuvano u Google Tabeli!")
+            st.balloons()
+        except Exception as e:
+            st.error(zeta if 'zeta' in locals() else f"Došlo je do greške pri upisu: {e}")
