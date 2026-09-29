@@ -37,11 +37,13 @@ for i, naziv in enumerate(stavke_nazivi, start=1):
     cols = st.columns([3, 1])
     with cols[0]:
         status = st.checkbox(naziv, value=True, key=f"ch_{i}")
+    
     napomena = ""
     if not status:
         with cols[1]:
             st.warning("Nedostaje")
         napomena = st.text_input(f"Razlog za: {naziv}", key=f"nap_{i}")
+        
     rezultati_forme.append("OK" if status else "Nedostaje")
     rezultati_forme.append(napomena)
 
@@ -90,9 +92,20 @@ if st.button("Pošalji izveštaj", type="primary", use_container_width=True):
         ]
         
         novi_df = pd.DataFrame([vrednosti], columns=kolone_redosled)
-        existing_df = conn.read(ttl="0s")
+        
+        # Ispravljen URL i poziv
+        existing_df = conn.read(
+            spreadsheet="https://docs.google.com/spreadsheets/d/1BhuM_b7K_G8GMUQCDhVSJc8eSHin_-Qfe3mkTWTVuS8/edit", 
+            ttl="0s"
+        )
+        
         updated_df = pd.concat([existing_df, novi_df], ignore_index=True)
-        conn.update(data=updated_df)
+        
+        # Ispravljen URL i poziv
+        conn.update(
+            spreadsheet="https://docs.google.com/spreadsheets/d/1BhuM_b7K_G8GMUQCDhVSJc8eSHin_-Qfe3mkTWTVuS8/edit", 
+            data=updated_df
+        )
         
         st.success("Uspešno poslato i sačuvano u Google Tabeli!")
         st.balloons()
