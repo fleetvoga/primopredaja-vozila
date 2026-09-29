@@ -66,24 +66,6 @@ if st.button("Pošalji izveštaj", type="primary", use_container_width=True):
     if not registracija or not p_ime or not uz_ime:
         st.error("Molimo popunite registraciju i imena oba vozača!")
     else:
-        kolone_redosled = [
-            "datum", "vreme", "registracija",
-            "stavka_1_saobracajna", "napomena_1", "stavka_2_polisa", "napomena_2",
-            "stavka_3_zeleni_karton", "napomena_3", "stavka_4_evropski_izvestaj", "napomena_4",
-            "stavka_5_prsluk", "napomena_5", "stavka_6_drzac_za_telefon", "napomena_6",
-            "stavka_7_kabl_vozac", "napomena_7", "stavka_8_kabl_klijent_c", "napomena_8",
-            "stavka_9_kabl_klijent_iphone", "napomena_9", "stavka_10_voda_drzaci", "napomena_10",
-            "stavka_11_voda_naslon", "napomena_11", "stavka_12_voda_prtljaznik", "napomena_12",
-            "stavka_13_vlazne_maramice", "napomena_13", "stavka_14_bezbednosni_komplet", "napomena_14",
-            "stavka_15_kisobran", "napomena_15", "stavka_16_buster", "napomena_16",
-            "stavka_17_sediste", "napomena_17", "stavka_18_tablica_docek", "napomena_18",
-            "stavka_19_dodatak_pojas", "napomena_19", "stavka_20_tag", "napomena_20",
-            "stavka_21_kartica_rampa", "napomena_21", "stavka_22_kartica_gorivo", "napomena_22",
-            "stavka_23_marker_i_papir", "napomena_23",
-            "predaje_ime", "predaje_prezime", "predaje_telefon",
-            "preuzima_ime", "preuzima_prezime", "preuzima_telefon"
-        ]
-        
         vrednosti = [
             trenutni_datum, trenutno_vreme, registracija,
             *rezultati_forme,
@@ -91,21 +73,12 @@ if st.button("Pošalji izveštaj", type="primary", use_container_width=True):
             uz_ime, uz_prezime, uz_tel
         ]
         
-        novi_df = pd.DataFrame([vrednosti], columns=kolone_redosled)
+        # URL Google tablice
+        spreadsheet_url = "https://docs.google.com/spreadsheets/d/1BhuM_b7K_G8GMUQCDhVSJc8eSHin_-Qfe3mkTWTVuS8/edit"
         
-        # Ispravljen URL i poziv
-        existing_df = conn.read(
-            spreadsheet="https://docs.google.com/spreadsheets/d/1BhuM_b7K_G8GMUQCDhVSJc8eSHin_-Qfe3mkTWTVuS8/edit", 
-            ttl="0s"
-        )
-        
-        updated_df = pd.concat([existing_df, novi_df], ignore_index=True)
-        
-        # Ispravljen URL i poziv
-        conn.update(
-            spreadsheet="https://docs.google.com/spreadsheets/d/1BhuM_b7K_G8GMUQCDhVSJc8eSHin_-Qfe3mkTWTVuS8/edit", 
-            data=updated_df
-        )
+        # Direktno dodavanje novog reda na kraj tablice preko gspread klijenta
+        sheet = conn.client.open_by_url(spreadsheet_url).sheet1
+        sheet.append_row(vrednosti)
         
         st.success("Uspešno poslato i sačuvano u Google Tabeli!")
         st.balloons()
