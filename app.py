@@ -30,7 +30,8 @@ stavke_nazivi = [
     "13. Vlažne maramice na poziciji", "14. Bezbednosni komplet", "15. Kišobran",
     "16. Buster za decu", "17. Sedište za decu (opciono)", "18. Tablica za docek",
     "19. Dodatak za pojas", "20. TAG", "21. Kartica za rampu",
-    "22. Kartica za gorivo", "23. Marker i papir"
+    "22. Kartica za gorivo", "23. Marker i papir",
+    "24. Krpa za stakla", "25. Krpa za displej", "26. Krpa za pragove", "27. Jelenska koža"
 ]
 
 rezultati_forme = []
@@ -88,4 +89,4 @@ if st.button("Pošalji izveštaj", type="primary", use_container_width=True):
             st.success("Uspešno poslato i sačuvano u Google Tabeli!")
             st.balloons()
         except Exception as e:
-            st.error(zeta if 'zeta' in locals() else f"Došlo je do greške pri upisu: {e}")
+            st.error(f"Došlo je do greške pri upisu: {e}")
