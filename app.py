@@ -82,9 +82,14 @@ if st.button("Pošalji izveštaj", type="primary", use_container_width=True):
             credentials = dict(st.secrets["connections"]["gsheets"]["service_account"])
             gc = gspread.service_account_from_dict(credentials)
             
-            # Otvaranje tablice i dodavanje reda
+            # Otvaranje tablice
             sheet = gc.open_by_url(spreadsheet_url).sheet1
-            sheet.append_row(vrednosti)
+            
+            # Pronalaženje prvog sledećeg zaista praznog reda gledajući kolonu A
+            next_row = len(sheet.col_values(1)) + 1
+            
+            # Upisivanje direktno počevši od kolone A u taj red (opseg A{next_row})
+            sheet.update(f"A{next_row}", [vrednosti])
             
             st.success("Uspešno poslato i sačuvano u Google Tabeli!")
             st.balloons()
